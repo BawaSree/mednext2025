@@ -1,32 +1,46 @@
-name: Force Sync from Account A
+name: Force Sync from Public Repo (Account A)
 
 on:
-  workflow_dispatch:  # Manual trigger
+  workflow_dispatch:  # Trigger manually
+  schedule:
+    - cron: '0 * * * *'  # Optional: hourly
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     steps:
       # Step 1: Checkout Account B (this repo)
-      - uses: actions/checkout@v4
+      - name: Checkout Target Repo
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed for full history
+          fetch-depth: 0  # full history
 
-      # Step 2: Configure Git identity
+      # Step 2: Configure Git
       - name: Setup Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      # Step 3: Add Account A as a remote and fetch
-      - name: Add and Fetch from Source (Account A)
+      # Step 3: Add Account A as remote and fetch
+      - name: Add and Fetch Source (Account A)
         run: |
           git remote add source https://github.com/BawadharaniSree/MedNext2025.git
           git fetch source
 
-      # Step 4: Force reset main to source/main and push
+      # Step 4: Force reset to source/main and push
       - name: Force Sync
         run: |
           git checkout main
           git reset --hard source/main
           git push origin main --force
+
+      # Step 5: Show log (for debug)
+      - name: Show Last Commit
+        run: git log -1 --oneline
+
+        
+      - name: Show Remotes and Branches
+        run: |
+          git remote -v
+          git branch -a
