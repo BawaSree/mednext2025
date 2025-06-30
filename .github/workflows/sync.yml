@@ -1,34 +1,32 @@
-name: Sync from Account A
+name: Force Sync from Account A
+
 on:
-  schedule:
-    - cron: '0 * * * *'  # Hourly sync (UTC)
-  workflow_dispatch:     # Manual trigger
+  workflow_dispatch:  # Manual trigger
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Checkout target repo (Account B)
+      # Step 1: Checkout Account B (this repo)
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Get full history
+          fetch-depth: 0  # Needed for full history
 
-      # Step 2: Configure git
+      # Step 2: Configure Git identity
       - name: Setup Git
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
 
-      # Step 3: Add source repo (Account A)
-      - name: Add Source Remote
+      # Step 3: Add Account A as a remote and fetch
+      - name: Add and Fetch from Source (Account A)
         run: |
           git remote add source https://github.com/BawadharaniSree/MedNext2025.git
-          git fetch source --tags  # Include tags
+          git fetch source
 
-      # Step 4: Merge changes
-      - name: Sync Changes
+      # Step 4: Force reset main to source/main and push
+      - name: Force Sync
         run: |
           git checkout main
-          git merge -X theirs source/main --allow-unrelated-histories --no-edit
-          git push origin main
-          git push --tags origin  # Push tags
+          git reset --hard source/main
+          git push origin main --force
